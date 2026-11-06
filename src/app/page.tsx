@@ -5,7 +5,6 @@ import { useState } from 'react';
 interface ImageMeta {
   squareUrl: string;
   landscapeUrl: string;
-  originalUrl: string;
   author: string;
   authorUrl: string;
 }
@@ -51,10 +50,10 @@ export default function Home() {
         setEditedIGText(data.instagram[0]?.text || '');
         setEditedSubstackText(data.substack[0]?.text || '');
       } else {
-        alert(data.error || 'Error procesando el enlace');
+        alert(data.error || 'Error al generar');
       }
     } catch {
-      alert('Error de conexión con el servidor');
+      alert('Error de conexión');
     } finally {
       setLoading(false);
     }
@@ -82,63 +81,59 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 py-10 px-4 font-sans text-slate-800">
-      <div className="max-w-5xl mx-auto">
-        {/* Cabecera */}
-        <header className="text-center mb-10">
-          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">
-            Social Studio
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 py-12 px-6 font-sans text-slate-800">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-10">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 mb-3">
+            Gestor de Contenido para Redes
           </h1>
-          <p className="text-slate-600 text-lg max-w-xl mx-auto">
-            Genera, selecciona y personaliza copys e imágenes listas para Instagram y Substack Notes a partir de cualquier enlace.
+          <p className="text-slate-600 text-base max-w-lg mx-auto">
+            Introduce tu enlace para extraer resúmenes profesionales, opciones editables e imágenes de calidad con autoría.
           </p>
-        </header>
+        </div>
 
-        {/* Formulario */}
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-10">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 mb-10 backdrop-blur-sm">
           <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
             <input
               type="url"
-              placeholder="https://tuweb.com/tu-articulo"
+              placeholder="Pega la URL de tu artículo o publicación..."
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               required
-              className="flex-1 px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 bg-slate-50 focus:bg-white transition"
+              className="flex-1 px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-800 text-sm transition"
             />
             <button
               type="submit"
               disabled={loading}
-              className="bg-indigo-600 text-white font-semibold px-7 py-3 rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 shadow-sm"
+              className="bg-slate-900 text-white font-medium px-6 py-3 rounded-xl hover:bg-slate-800 transition disabled:opacity-50 text-sm shadow-sm"
             >
-              {loading ? 'Procesando enlace...' : 'Generar contenido'}
+              {loading ? 'Analizando con IA...' : 'Generar Opciones'}
             </button>
           </form>
         </div>
 
-        {/* Resultados */}
         {results && (
-          <div className="grid lg:grid-cols-2 gap-8">
-            {/* Bloque Instagram */}
-            <article className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Columna Instagram */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold flex items-center gap-2 text-slate-900">
-                    <span className="p-2 bg-pink-100 text-pink-600 rounded-lg text-sm">IG</span>
+                <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+                  <h2 className="font-semibold text-slate-900 flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-pink-500"></span>
                     Instagram
                   </h2>
-                  <span className="text-xs text-slate-400 font-mono">Formato 1:1</span>
+                  <span className="text-xs text-slate-400">Cuadrada (1:1)</span>
                 </div>
 
-                {/* Selección de opciones */}
-                <div className="flex gap-2 mb-5">
+                <div className="flex gap-1.5 mb-4">
                   {results.instagram.map((opt, idx) => (
                     <button
                       key={opt.id}
                       onClick={() => handleSelectIG(idx)}
-                      className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold border transition ${
+                      className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition ${
                         selectedIG === idx
-                          ? 'bg-pink-600 text-white border-pink-600 shadow-sm'
-                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                          ? 'bg-slate-900 text-white shadow-sm'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                       }`}
                     >
                       {opt.label}
@@ -146,15 +141,16 @@ export default function Home() {
                   ))}
                 </div>
 
-                {/* Previsualización de Imagen IG (1:1 Cuadrada Compacta) */}
                 {results.instagram[selectedIG]?.image && (
-                  <div className="mb-4 bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col items-center">
-                    <img
-                      src={results.instagram[selectedIG].image.squareUrl}
-                      alt="Vista previa IG"
-                      className="w-48 h-48 object-cover rounded-lg shadow-sm border border-slate-200"
-                    />
-                    <p className="text-[11px] text-slate-400 mt-2">
+                  <div className="mb-4">
+                    <div className="overflow-hidden rounded-xl border border-slate-200 aspect-square bg-slate-50 mb-1.5">
+                      <img
+                        src={results.instagram[selectedIG].image.squareUrl}
+                        alt="Instagram visual"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <p className="text-[11px] text-slate-400 text-right">
                       Foto por{' '}
                       <a
                         href={results.instagram[selectedIG].image.authorUrl}
@@ -169,44 +165,42 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* Editor editable */}
                 <textarea
-                  rows={7}
+                  rows={8}
                   value={editedIGText}
                   onChange={(e) => setEditedIGText(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:bg-white transition"
+                  className="w-full p-3 bg-slate-50/50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-800 transition"
                 />
               </div>
 
               <button
                 onClick={() => copyToClipboard(editedIGText, 'ig')}
-                className="mt-4 w-full bg-slate-900 text-white py-3 rounded-xl font-medium hover:bg-slate-800 transition shadow-sm text-sm"
+                className="mt-5 w-full bg-slate-900 text-white py-2.5 rounded-xl text-xs font-medium hover:bg-slate-800 transition shadow-sm"
               >
-                {copiedIG ? '¡Texto copiado al portapapeles! ✓' : 'Copiar texto para Instagram'}
+                {copiedIG ? '¡Copiado al portapapeles! ✓' : 'Copiar texto de Instagram'}
               </button>
-            </article>
+            </div>
 
-            {/* Bloque Substack Notes */}
-            <article className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
+            {/* Columna Substack Notes */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold flex items-center gap-2 text-slate-900">
-                    <span className="p-2 bg-orange-100 text-orange-600 rounded-lg text-sm">Notes</span>
+                <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+                  <h2 className="font-semibold text-slate-900 flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
                     Substack Notes
                   </h2>
-                  <span className="text-xs text-slate-400 font-mono">Formato 16:9</span>
+                  <span className="text-xs text-slate-400">Horizontal (16:9)</span>
                 </div>
 
-                {/* Selección de opciones */}
-                <div className="flex gap-2 mb-5">
+                <div className="flex gap-1.5 mb-4">
                   {results.substack.map((opt, idx) => (
                     <button
                       key={opt.id}
                       onClick={() => handleSelectSubstack(idx)}
-                      className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold border transition ${
+                      className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition ${
                         selectedSubstack === idx
-                          ? 'bg-orange-600 text-white border-orange-600 shadow-sm'
-                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                          ? 'bg-slate-900 text-white shadow-sm'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                       }`}
                     >
                       {opt.label}
@@ -214,15 +208,16 @@ export default function Home() {
                   ))}
                 </div>
 
-                {/* Previsualización de Imagen Substack (16:9 Card Compacta) */}
                 {results.substack[selectedSubstack]?.image && (
-                  <div className="mb-4 bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col items-center">
-                    <img
-                      src={results.substack[selectedSubstack].image.landscapeUrl}
-                      alt="Vista previa Notes"
-                      className="w-full h-36 object-cover rounded-lg shadow-sm border border-slate-200"
-                    />
-                    <p className="text-[11px] text-slate-400 mt-2">
+                  <div className="mb-4">
+                    <div className="overflow-hidden rounded-xl border border-slate-200 aspect-video bg-slate-50 mb-1.5">
+                      <img
+                        src={results.substack[selectedSubstack].image.landscapeUrl}
+                        alt="Substack visual"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <p className="text-[11px] text-slate-400 text-right">
                       Foto por{' '}
                       <a
                         href={results.substack[selectedSubstack].image.authorUrl}
@@ -237,25 +232,24 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* Editor editable */}
                 <textarea
-                  rows={7}
+                  rows={8}
                   value={editedSubstackText}
                   onChange={(e) => setEditedSubstackText(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition"
+                  className="w-full p-3 bg-slate-50/50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-800 transition"
                 />
               </div>
 
               <button
                 onClick={() => copyToClipboard(editedSubstackText, 'substack')}
-                className="mt-4 w-full bg-orange-600 text-white py-3 rounded-xl font-medium hover:bg-orange-700 transition shadow-sm text-sm"
+                className="mt-5 w-full bg-slate-900 text-white py-2.5 rounded-xl text-xs font-medium hover:bg-slate-800 transition shadow-sm"
               >
-                {copiedSubstack ? '¡Texto copiado al portapapeles! ✓' : 'Copiar texto para Substack Notes'}
+                {copiedSubstack ? '¡Copiado al portapapeles! ✓' : 'Copiar texto de Substack'}
               </button>
-            </article>
+            </div>
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }
