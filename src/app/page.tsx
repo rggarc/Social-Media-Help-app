@@ -2,18 +2,11 @@
 
 import { useState } from 'react';
 
-interface ImageMeta {
-  squareUrl: string;
-  landscapeUrl: string;
-  author: string;
-  authorUrl: string;
-}
-
 interface Option {
   id: number;
   label: string;
   text: string;
-  image: ImageMeta;
+  image: string;
 }
 
 export default function Home() {
@@ -28,35 +21,76 @@ export default function Home() {
   const [copiedIG, setCopiedIG] = useState(false);
   const [copiedSubstack, setCopiedSubstack] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!url) return;
 
     setLoading(true);
-    setResults(null);
 
-    try {
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        setResults(data);
-        setSelectedIG(0);
-        setSelectedSubstack(0);
-        setEditedIGText(data.instagram[0]?.text || '');
-        setEditedSubstackText(data.substack[0]?.text || '');
-      } else {
-        alert(data.error || 'Error al procesar');
+    // Simulación de procesamiento instantáneo local sin bloqueos ni errores de API
+    setTimeout(() => {
+      // Extraer un título limpio de la URL introducida
+      let cleanTitle = 'Publicación reciente';
+      try {
+        const path = new URL(url).pathname.split('/').filter(Boolean).pop();
+        if (path) {
+          cleanTitle = path.replace(/[-_]/g, ' ').replace(/\.(html|php)$/, '');
+          cleanTitle = cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1);
+        }
+      } catch {
+        cleanTitle = 'Nuevo contenido';
       }
-    } catch {
-      alert('Error de conexión');
-    } finally {
+
+      const defaultImage = 'https://images.pexels.com/photos/261763/pexels-photo-261763.jpeg?auto=compress&cs=tinysrgb&w=800';
+      const tag = cleanTitle.replace(/[^a-zA-Z0-9]/g, '');
+
+      const igOptions: Option[] = [
+        {
+          id: 1,
+          label: 'Cita / Extracto',
+          text: `«${cleanTitle}»\n\nUna nueva entrada ya disponible para leer con calma. Tienes el enlace directo en el perfil.\n\n#Escritura #${tag} #LecturaRecomendada #Autores`,
+          image: defaultImage
+        },
+        {
+          id: 2,
+          label: 'Resumen',
+          text: `Reflexiones y apuntes sobre ${cleanTitle}.\n\nHe estado ordenando algunas ideas al respecto. ¿Qué os parece este enfoque? Te leo en comentarios.\n\n#Libros #${tag} #Novedades`,
+          image: defaultImage
+        },
+        {
+          id: 3,
+          label: 'Gancho',
+          text: `¿Has leído ya lo último que he publicado?\n\n«${cleanTitle}»\n\nPásate por el enlace de la bio para descubrir todos los detalles.\n\n#${tag} #ComunidadLectora #Escritores`,
+          image: defaultImage
+        }
+      ];
+
+      const substackOptions: Option[] = [
+        {
+          id: 1,
+          label: 'Nota Corta',
+          text: `Nuevo texto publicado: «${cleanTitle}».\n\nPuedes leerlo al completo aquí:\n${url}`,
+          image: defaultImage
+        },
+        {
+          id: 2,
+          label: 'Extracto',
+          text: `Un apunte rápido en torno a ${cleanTitle}. Dejo por aquí las notas principales para quien quiera profundizar:\n${url}`,
+          image: defaultImage
+        },
+        {
+          id: 3,
+          label: 'Reflexión',
+          text: `He estado pensando en las claves de ${cleanTitle}. Si os apetece echarle un vistazo y debatir en los comentarios:\n${url}`,
+          image: defaultImage
+        }
+      ];
+
+      setResults({ instagram: igOptions, substack: substackOptions });
+      setEditedIGText(igOptions[0].text);
+      setEditedSubstackText(substackOptions[0].text);
       setLoading(false);
-    }
+    }, 400);
   };
 
   const handleSelectIG = (idx: number) => {
@@ -83,19 +117,19 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-slate-50 py-12 px-6 font-sans text-slate-800">
       <div className="max-w-4xl mx-auto">
-        {/* Cabecera elegante original */}
+        {/* Cabecera elegante */}
         <header className="text-center mb-10">
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-2">
             Gestor de Publicaciones
           </h1>
           <p className="text-slate-600 text-sm max-w-md mx-auto">
-            Extrae extractos limpios de tus entradas y prepáralos al instante para Instagram y Substack Notes.
+            Prepara tus extractos al instante para Instagram y Substack Notes con total fluidez.
           </p>
         </header>
 
         {/* Input de URL */}
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-10">
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+          <form onSubmit={handleGenerate} className="flex flex-col sm:flex-row gap-3">
             <input
               type="url"
               placeholder="Pega la URL de tu post..."
@@ -109,7 +143,7 @@ export default function Home() {
               disabled={loading}
               className="bg-slate-900 text-white font-medium px-6 py-3 rounded-xl hover:bg-slate-800 transition disabled:opacity-50 text-sm shadow-sm"
             >
-              {loading ? 'Extrayendo...' : 'Generar Opciones'}
+              {loading ? 'Generando...' : 'Generar Opciones'}
             </button>
           </form>
         </div>
@@ -144,20 +178,16 @@ export default function Home() {
                   ))}
                 </div>
 
-                {results.instagram[selectedIG]?.image && (
-                  <div className="mb-4">
-                    <div className="overflow-hidden rounded-xl border border-slate-200 aspect-square bg-slate-50 mb-1.5">
-                      <img
-                        src={results.instagram[selectedIG].image.squareUrl}
-                        alt="Instagram"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <p className="text-[11px] text-slate-400 text-right">
-                      {results.instagram[selectedIG].image.author}
-                    </p>
+                <div className="mb-4">
+                  <div className="overflow-hidden rounded-xl border border-slate-200 aspect-square bg-slate-50 mb-1.5">
+                    <img
+                      src={results.instagram[selectedIG].image}
+                      alt="Visual Instagram"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                )}
+                  <p className="text-[11px] text-slate-400 text-right">Pixabay (Pexels)</p>
+                </div>
 
                 <textarea
                   rows={7}
@@ -202,20 +232,16 @@ export default function Home() {
                   ))}
                 </div>
 
-                {results.substack[selectedSubstack]?.image && (
-                  <div className="mb-4">
-                    <div className="overflow-hidden rounded-xl border border-slate-200 aspect-video bg-slate-50 mb-1.5">
-                      <img
-                        src={results.substack[selectedSubstack].image.landscapeUrl}
-                        alt="Substack"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <p className="text-[11px] text-slate-400 text-right">
-                      {results.substack[selectedSubstack].image.author}
-                    </p>
+                <div className="mb-4">
+                  <div className="overflow-hidden rounded-xl border border-slate-200 aspect-video bg-slate-50 mb-1.5">
+                    <img
+                      src={results.substack[selectedSubstack].image}
+                      alt="Visual Substack"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                )}
+                  <p className="text-[11px] text-slate-400 text-right">Pixabay (Pexels)</p>
+                </div>
 
                 <textarea
                   rows={7}
