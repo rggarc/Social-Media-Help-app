@@ -13,16 +13,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Falta configurar la GEMINI_API_KEY en Vercel' }, { status: 500 });
     }
 
-    const prompt = `Analiza la siguiente URL o tema: ${url}. 
-    Genera contenido promocional optimizado para dos redes sociales:
-    1. Instagram: Un texto atractivo, visual, con emojis y hashtags adecuados.
-    2. Substack Notes: Una reflexión breve, más reflexiva y directa, orientada a lectores de newsletter.
-    
-    Responde estrictamente en formato JSON con la siguiente estructura (sin bloques de código markdown ni texto adicional):
-    {
-      "instagram": "texto para instagram aquí",
-      "substack": "texto para substack aquí"
-    }`;
+    // Prompt claro indicando que extraiga la idea del enlace/tema y redacte en español
+    const prompt = `Analiza el tema o contenido indicado en esta URL: ${url}. 
+Si no puedes leer la web directamente, deduce el tema principal a partir de la estructura del enlace o crea una publicación basada en esa temática.
+
+Genera dos adaptaciones promocionales en español:
+1. Instagram: Un texto visual, directo, enganchador, con emojis y 3-5 hashtags relevantes.
+2. Substack Notes: Una reflexión breve, elegante y más profunda, ideal para la comunidad de Substack.
+
+Responde ÚNICAMENTE en formato JSON válido sin ningún texto ni formato markdown adicional alrededor. Estructura exacta:
+{"instagram": "texto aquí", "substack": "texto aquí"}`;
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
@@ -39,16 +39,22 @@ export async function POST(request: Request) {
     const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!rawText) {
-      throw new Error('No se obtuvo respuesta de Gemini');
+      throw new Error('La IA no ha podido generar respuesta para este enlace.');
     }
 
-    const cleanJson = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+    // Limpieza de caracteres extraños o bloques markdown si la IA los incluye por error
+    const cleanJson = rawText
+      .replace(/^```json/g, '')
+      .replace(/^```/g, '')
+      .replace(/```$/g, '')
+      .trim();
+
     const parsedData = JSON.parse(cleanJson);
 
     return NextResponse.json(parsedData);
   } catch (error: any) {
     return NextResponse.json(
-      { error: 'Error al procesar la solicitud', details: error.message },
+      { error: 'No se ha podido procesar el enlace.', details: error.message },
       { status: 500 }
     );
   }
