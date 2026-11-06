@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { GoogleGenAI } from '@google/genai';
 
 export async function POST(request: Request) {
   try {
@@ -16,6 +17,9 @@ export async function POST(request: Request) {
       );
     }
 
+    // Inicializamos el cliente oficial de Gemini
+    const ai = new GoogleGenAI({ apiKey });
+
     const prompt = `Analiza la siguiente URL o tema: ${url}.
 Genera dos textos promocionales en español:
 1. Para Instagram: Atractivo, visual, con emojis y hashtags adecuados.
@@ -24,55 +28,31 @@ Genera dos textos promocionales en español:
 DEBES responder ÚNICAMENTE con un objeto JSON válido, sin bloques de código ni texto adicional, con este formato exacto:
 {"instagram": "Texto para Instagram", "substack": "Texto para Substack"}`;
 
-    // Lista de modelos oficiales en orden de intento
-    const endpoints = [
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`
-    ];
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+    });
 
-    let lastError = '';
+    const rawText = response.text;
 
-    for (const endpoint of endpoints) {
-      try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-          }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
-          const rawText = data.candidates[0].content.parts[0].text;
-          let cleanJson = rawText.trim();
-          if (cleanJson.startsWith('```')) {
-            cleanJson = cleanJson.replace(/^```(json)?/, '').replace(/```$/, '').trim();
-          }
-
-          try {
-            const parsedData = JSON.parse(cleanJson);
-            return NextResponse.json(parsedData);
-          } catch (e) {
-            return NextResponse.json({
-              instagram: rawText,
-              substack: rawText
-            });
-          }
-        } else if (data.error?.message) {
-          lastError = data.error.message;
-        }
-      } catch (err: any) {
-        lastError = err.message;
-      }
+    if (!rawText) {
+      return NextResponse.json({ error: 'Gemini no devolvió texto.' }, { status: 500 });
     }
 
-    return NextResponse.json(
-      { error: `Error de Gemini API: ${lastError}` },
-      { status: 500 }
-    );
+    let cleanJson = rawText.trim();
+    if (cleanJson.startsWith('```')) {
+      cleanJson = cleanJson.replace(/^```(json)?/, '').replace(/```$/, '').trim();
+    }
+
+    try {
+      const parsedData = JSON.parse(cleanJson);
+      return NextResponse.json(parsedData);
+    } catch (e) {
+      return NextResponse.json({
+        instagram: rawText,
+        substack: rawText
+      });
+    }
 
   } catch (error: any) {
     return NextResponse.json(
