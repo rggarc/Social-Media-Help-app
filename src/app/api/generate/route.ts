@@ -25,34 +25,52 @@ Genera dos textos promocionales en español:
 DEBES responder ÚNICAMENTE con un objeto JSON válido con este formato exacto:
 {"instagram": "Texto para Instagram", "substack": "Texto para Substack"}`;
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'llama-3.1-70b-versatile',
-        messages: [{ role: 'user', content: prompt }],
-        response_format: { type: 'json_object' },
-      }),
-    });
+    // Lista de modelos activos en Groq para fallback automático
+    const availableModels = [
+      'llama-3.3-70b-versatile',
+      'gemma2-9b-it',
+      'llama3-8b-8192'
+    ];
 
-    const data = await response.json();
+    let lastError = '';
+    let parsedData = null;
 
-    if (!response.ok) {
+    for (const model of availableModels) {
+      try {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [{ role: 'user', content: prompt }],
+            response_format: { type: 'json_object' },
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.choices?.[0]?.message?.content) {
+          const rawText = data.choices[0].message.content;
+          parsedData = JSON.parse(rawText);
+          break; // ¡Conexión con éxito! Salimos del bucle
+        } else {
+          lastError = data.error?.message || `Error en modelo ${model}`;
+        }
+      } catch (err) {
+        lastError = err instanceof Error ? err.message : 'Error en la petición';
+      }
+    }
+
+    if (!parsedData) {
       return NextResponse.json(
-        { error: `Error en la API de Groq: ${data.error?.message || 'Error desconocido'}` },
-        { status: response.status }
+        { error: `Error en la API de Groq: ${lastError}` },
+        { status: 500 }
       );
     }
 
-    const rawText = data.choices?.[0]?.message?.content;
-    if (!rawText) {
-      return NextResponse.json({ error: 'Sin respuesta de la IA' }, { status: 500 });
-    }
-
-    const parsedData = JSON.parse(rawText);
     return NextResponse.json(parsedData);
 
   } catch (error) {
