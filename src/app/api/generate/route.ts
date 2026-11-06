@@ -25,7 +25,6 @@ Genera dos textos promocionales en español:
 DEBES responder ÚNICAMENTE con un objeto JSON válido con este formato exacto:
 {"instagram": "Texto para Instagram", "substack": "Texto para Substack"}`;
 
-    // Usamos el modelo activo y gratuito por defecto en Groq
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -33,7 +32,7 @@ DEBES responder ÚNICAMENTE con un objeto JSON válido con este formato exacto:
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
+        model: 'llama-3.1-70b-versatile',
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' },
       }),
