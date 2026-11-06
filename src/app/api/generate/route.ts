@@ -25,8 +25,8 @@ Genera dos textos promocionales en español:
 DEBES responder ÚNICAMENTE con un objeto JSON válido con este formato exacto:
 {"instagram": "Texto para Instagram", "substack": "Texto para Substack"}`;
 
-    // Probamos primero con gemini-1.5-flash y si hay alta demanda, con gemini-1.5-pro de respaldo
-    const models = ['gemini-1.5-flash', 'gemini-1.5-pro'];
+    // Lista ampliada de modelos para probar consecutivamente
+    const models = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro'];
     let response = null;
     let data = null;
 
@@ -55,7 +55,7 @@ DEBES responder ÚNICAMENTE con un objeto JSON válido con este formato exacto:
 
     if (!response || !data || !data.candidates?.[0]?.content?.parts?.[0]?.text) {
       return NextResponse.json(
-        { error: 'Los servidores de IA están ocupados en este momento. Por favor, pulsa de nuevo en generar en unos segundos.' },
+        { error: 'Los servidores están ocupados. Vuelve a pulsar en generar en un instante.' },
         { status: 503 }
       );
     }
