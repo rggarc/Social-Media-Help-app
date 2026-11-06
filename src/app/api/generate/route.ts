@@ -25,12 +25,11 @@ Genera dos textos promocionales en español:
 DEBES responder ÚNICAMENTE con un objeto JSON válido con este formato exacto:
 {"instagram": "Texto para Instagram", "substack": "Texto para Substack"}`;
 
-    // Lista limpia de modelos activos oficialmente en Groq
+    // Lista estricta con los modelos vigentes en producción
     const activeModels = [
       'llama-3.3-70b-versatile',
-      'llama-3.2-3b-preview',
-      'mixtral-8x7b-32768',
-      'gemma2-9b-it'
+      'llama-3.2-11b-vision-preview',
+      'llama-3.2-3b-preview'
     ];
 
     let lastError = '';
@@ -56,7 +55,7 @@ DEBES responder ÚNICAMENTE con un objeto JSON válido con este formato exacto:
         if (response.ok && data.choices?.[0]?.message?.content) {
           const rawText = data.choices[0].message.content;
           parsedData = JSON.parse(rawText);
-          break; // ¡Respuesta correcta encontrada!
+          break; // ¡Éxito! Salimos del bucle
         } else {
           lastError = data.error?.message || `Error en modelo ${model}`;
         }
