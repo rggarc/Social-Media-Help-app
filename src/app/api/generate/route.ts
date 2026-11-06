@@ -25,23 +25,43 @@ Genera dos textos promocionales en español:
 DEBES responder ÚNICAMENTE con un objeto JSON válido con este formato exacto:
 {"instagram": "Texto para Instagram", "substack": "Texto para Substack"}`;
 
-    // Usamos el modelo exigido por Google: gemini-3.8-flash
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
 
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-      }),
-    });
+    let res: Response | null = null;
+    let json: any = null;
+    const maxRetries = 3;
 
-    const json = await res.json();
+    // Bucle de reintentos automáticos para lidiar con picos de alta demanda (503)
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+        }),
+      });
 
-    if (!res.ok) {
+      json = await res.json();
+
+      // Si la respuesta es exitosa, salimos del bucle
+      if (res.ok) {
+        break;
+      }
+
+      // Si es un error 503 (alta demanda), esperamos antes de reintentar (1s, 2s...)
+      if (res.status === 503 && attempt < maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+        continue;
+      }
+
+      // Si es otro tipo de error, rompemos el bucle para mostrarlo
+      break;
+    }
+
+    if (!res || !res.ok) {
       return NextResponse.json(
-        { error: `Error detallado de Google (${res.status}): ${JSON.stringify(json.error || json)}` },
-        { status: res.status }
+        { error: `Error detallado de Google (${res?.status || 500}): ${JSON.stringify(json?.error || json)}` },
+        { status: res?.status || 500 }
       );
     }
 
