@@ -1,9 +1,8 @@
 import './globals.css';
-import type { Metadata } from 'next';
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Social Poster App',
-  description: 'Convierte cualquier enlace en publicaciones optimizadas para Instagram y Substack Notes.',
+  description: 'Generador de contenido para redes sociales',
 };
 
 export default function RootLayout({
@@ -13,11 +12,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body className="bg-slate-900 text-slate-100 antialiased min-h-screen">
+      <body className="bg-slate-950 text-slate-100 min-h-screen antialiased">
         {children}
       </body>
     </html>
   );
-
-  
 }
