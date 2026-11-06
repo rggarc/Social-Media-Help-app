@@ -25,17 +25,18 @@ Genera dos textos promocionales en español:
 DEBES responder ÚNICAMENTE con un objeto JSON válido con este formato exacto:
 {"instagram": "Texto para Instagram", "substack": "Texto para Substack"}`;
 
-    // Lista de modelos activos en Groq para fallback automático
-    const availableModels = [
+    // Lista limpia de modelos activos oficialmente en Groq
+    const activeModels = [
       'llama-3.3-70b-versatile',
-      'gemma2-9b-it',
-      'llama3-8b-8192'
+      'llama-3.2-3b-preview',
+      'mixtral-8x7b-32768',
+      'gemma2-9b-it'
     ];
 
     let lastError = '';
     let parsedData = null;
 
-    for (const model of availableModels) {
+    for (const model of activeModels) {
       try {
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
@@ -55,7 +56,7 @@ DEBES responder ÚNICAMENTE con un objeto JSON válido con este formato exacto:
         if (response.ok && data.choices?.[0]?.message?.content) {
           const rawText = data.choices[0].message.content;
           parsedData = JSON.parse(rawText);
-          break; // ¡Conexión con éxito! Salimos del bucle
+          break; // ¡Respuesta correcta encontrada!
         } else {
           lastError = data.error?.message || `Error en modelo ${model}`;
         }
