@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/genai';
 
 export async function POST(request: Request) {
   try {
@@ -17,9 +16,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Inicializamos el cliente oficial de Gemini
-    const ai = new GoogleGenAI({ apiKey });
-
     const prompt = `Analiza la siguiente URL o tema: ${url}.
 Genera dos textos promocionales en español:
 1. Para Instagram: Atractivo, visual, con emojis y hashtags adecuados.
@@ -28,31 +24,55 @@ Genera dos textos promocionales en español:
 DEBES responder ÚNICAMENTE con un objeto JSON válido, sin bloques de código ni texto adicional, con este formato exacto:
 {"instagram": "Texto para Instagram", "substack": "Texto para Substack"}`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-    });
+    // Endpoints válidos directos de la API REST de Gemini
+    const endpoints = [
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`
+    ];
 
-    const rawText = response.text;
+    let lastErrorMessage = '';
 
-    if (!rawText) {
-      return NextResponse.json({ error: 'Gemini no devolvió texto.' }, { status: 500 });
+    for (const endpoint of endpoints) {
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
+          const rawText = data.candidates[0].content.parts[0].text;
+          let cleanJson = rawText.trim();
+          if (cleanJson.startsWith('```')) {
+            cleanJson = cleanJson.replace(/^```(json)?/, '').replace(/```$/, '').trim();
+          }
+
+          try {
+            const parsedData = JSON.parse(cleanJson);
+            return NextResponse.json(parsedData);
+          } catch (e) {
+            return NextResponse.json({
+              instagram: rawText,
+              substack: rawText
+            });
+          }
+        } else if (data.error?.message) {
+          lastErrorMessage = data.error.message;
+        }
+      } catch (err: any) {
+        lastErrorMessage = err.message;
+      }
     }
 
-    let cleanJson = rawText.trim();
-    if (cleanJson.startsWith('```')) {
-      cleanJson = cleanJson.replace(/^```(json)?/, '').replace(/```$/, '').trim();
-    }
-
-    try {
-      const parsedData = JSON.parse(cleanJson);
-      return NextResponse.json(parsedData);
-    } catch (e) {
-      return NextResponse.json({
-        instagram: rawText,
-        substack: rawText
-      });
-    }
+    return NextResponse.json(
+      { error: `Error de Gemini API: ${lastErrorMessage}` },
+      { status: 500 }
+    );
 
   } catch (error: any) {
     return NextResponse.json(
