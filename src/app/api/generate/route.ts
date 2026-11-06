@@ -10,19 +10,19 @@ export async function POST(request: Request) {
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ error: 'Falta configurar la GEMINI_API_KEY en Vercel' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Falta la API Key en Vercel. Ve a Settings > Environment Variables, añade GEMINI_API_KEY y haz un Redeploy.' },
+        { status: 500 }
+      );
     }
 
-    // Prompt claro indicando que extraiga la idea del enlace/tema y redacte en español
-    const prompt = `Analiza el tema o contenido indicado en esta URL: ${url}. 
-Si no puedes leer la web directamente, deduce el tema principal a partir de la estructura del enlace o crea una publicación basada en esa temática.
+    const prompt = `Analiza la siguiente URL o tema: ${url}.
+Genera dos textos promocionales en español:
+1. Para Instagram: Atractivo, con emojis y hashtags.
+2. Para Substack Notes: Breve, reflexivo y enfocado a lectores de newsletter.
 
-Genera dos adaptaciones promocionales en español:
-1. Instagram: Un texto visual, directo, enganchador, con emojis y 3-5 hashtags relevantes.
-2. Substack Notes: Una reflexión breve, elegante y más profunda, ideal para la comunidad de Substack.
-
-Responde ÚNICAMENTE en formato JSON válido sin ningún texto ni formato markdown adicional alrededor. Estructura exacta:
-{"instagram": "texto aquí", "substack": "texto aquí"}`;
+DEBES responder ÚNICAMENTE con un objeto JSON válido, sin bloques de código ni palabras extra, con este formato exacto:
+{"instagram": "Texto para Instagram", "substack": "Texto para Substack"}`;
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
@@ -36,25 +36,32 @@ Responde ÚNICAMENTE en formato JSON válido sin ningún texto ni formato markdo
     );
 
     const data = await response.json();
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: `Error de Google Gemini: ${data.error?.message || 'Respuesta no válida'}` },
+        { status: response.status }
+      );
+    }
+
     const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!rawText) {
-      throw new Error('La IA no ha podido generar respuesta para este enlace.');
+      return NextResponse.json({ error: 'Gemini no devolvió texto.' }, { status: 500 });
     }
 
-    // Limpieza de caracteres extraños o bloques markdown si la IA los incluye por error
-    const cleanJson = rawText
-      .replace(/^```json/g, '')
-      .replace(/^```/g, '')
-      .replace(/```$/g, '')
-      .trim();
+    // Limpieza de formato si Gemini incluye llaves ```json
+    let cleanJson = rawText.trim();
+    if (cleanJson.startsWith('```')) {
+      cleanJson = cleanJson.replace(/^```(json)?/, '').replace(/```$/, '').trim();
+    }
 
     const parsedData = JSON.parse(cleanJson);
-
     return NextResponse.json(parsedData);
+
   } catch (error: any) {
     return NextResponse.json(
-      { error: 'No se ha podido procesar el enlace.', details: error.message },
+      { error: 'Error procesando la solicitud', details: error.message },
       { status: 500 }
     );
   }
