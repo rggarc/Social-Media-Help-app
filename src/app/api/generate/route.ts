@@ -25,7 +25,7 @@ Genera dos textos promocionales en español:
 DEBES responder ÚNICAMENTE con un objeto JSON válido con este formato exacto:
 {"instagram": "Texto para Instagram", "substack": "Texto para Substack"}`;
 
-    // Endpoint oficial de Groq (compatible con OpenAI) usando el modelo Llama 3 de alta velocidad
+    // Usamos el modelo activo y gratuito por defecto en Groq
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -33,7 +33,7 @@ DEBES responder ÚNICAMENTE con un objeto JSON válido con este formato exacto:
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'llama-3.1-8b-instant',
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' },
       }),
