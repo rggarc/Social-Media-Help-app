@@ -50,10 +50,10 @@ export default function Home() {
         setEditedIGText(data.instagram[0]?.text || '');
         setEditedSubstackText(data.substack[0]?.text || '');
       } else {
-        alert(data.error || 'No se pudo extraer la información');
+        alert(data.error || 'Error al procesar');
       }
     } catch {
-      alert('Error al conectar con la aplicación');
+      alert('Error de conexión');
     } finally {
       setLoading(false);
     }
@@ -83,18 +83,18 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-slate-50 py-12 px-6 font-sans text-slate-800">
       <div className="max-w-4xl mx-auto">
-        {/* Cabecera limpia */}
-        <div className="text-center mb-10">
+        {/* Cabecera elegante original */}
+        <header className="text-center mb-10">
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-2">
-            Asistente de Publicaciones
+            Gestor de Publicaciones
           </h1>
           <p className="text-slate-600 text-sm max-w-md mx-auto">
-            Extrae extractos reales e imágenes de tus entradas para compartirlos fácilmente en Instagram y Substack Notes.
+            Extrae extractos limpios de tus entradas y prepáralos al instante para Instagram y Substack Notes.
           </p>
-        </div>
+        </header>
 
-        {/* Buscador */}
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-10">
+        {/* Input de URL */}
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-10">
           <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
             <input
               type="url"
@@ -102,30 +102,30 @@ export default function Home() {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               required
-              className="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-800 text-sm"
+              className="flex-1 px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-900 text-sm"
             />
             <button
               type="submit"
               disabled={loading}
-              className="bg-slate-900 text-white font-medium px-6 py-2.5 rounded-xl hover:bg-slate-800 transition disabled:opacity-50 text-sm"
+              className="bg-slate-900 text-white font-medium px-6 py-3 rounded-xl hover:bg-slate-800 transition disabled:opacity-50 text-sm shadow-sm"
             >
-              {loading ? 'Extrayendo...' : 'Extraer Extractos'}
+              {loading ? 'Extrayendo...' : 'Generar Opciones'}
             </button>
           </form>
         </div>
 
-        {/* Resultados en 2 Columnas */}
+        {/* Resultados */}
         {results && (
           <div className="grid md:grid-cols-2 gap-8">
-            {/* Instagram */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
+            {/* Columna Instagram */}
+            <section className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
                   <h2 className="font-semibold text-slate-900 flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-pink-500"></span>
                     Instagram
                   </h2>
-                  <span className="text-xs text-slate-400">1:1</span>
+                  <span className="text-xs text-slate-400">Cuadrada (1:1)</span>
                 </div>
 
                 <div className="flex gap-1.5 mb-4">
@@ -135,7 +135,7 @@ export default function Home() {
                       onClick={() => handleSelectIG(idx)}
                       className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition ${
                         selectedIG === idx
-                          ? 'bg-slate-900 text-white'
+                          ? 'bg-slate-900 text-white shadow-sm'
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                       }`}
                     >
@@ -146,10 +146,10 @@ export default function Home() {
 
                 {results.instagram[selectedIG]?.image && (
                   <div className="mb-4">
-                    <div className="overflow-hidden rounded-xl border border-slate-200 aspect-square bg-slate-50 mb-1">
+                    <div className="overflow-hidden rounded-xl border border-slate-200 aspect-square bg-slate-50 mb-1.5">
                       <img
                         src={results.instagram[selectedIG].image.squareUrl}
-                        alt="Imagen para IG"
+                        alt="Instagram"
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -163,27 +163,27 @@ export default function Home() {
                   rows={7}
                   value={editedIGText}
                   onChange={(e) => setEditedIGText(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-800"
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900"
                 />
               </div>
 
               <button
                 onClick={() => copyToClipboard(editedIGText, 'ig')}
-                className="mt-5 w-full bg-slate-900 text-white py-2.5 rounded-xl text-xs font-medium hover:bg-slate-800 transition"
+                className="mt-5 w-full bg-slate-900 text-white py-2.5 rounded-xl text-xs font-medium hover:bg-slate-800 transition shadow-sm"
               >
-                {copiedIG ? '¡Copiado! ✓' : 'Copiar para Instagram'}
+                {copiedIG ? '¡Copiado al portapapeles! ✓' : 'Copiar texto de Instagram'}
               </button>
-            </div>
+            </section>
 
-            {/* Substack Notes */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
+            {/* Columna Substack Notes */}
+            <section className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
                   <h2 className="font-semibold text-slate-900 flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
                     Substack Notes
                   </h2>
-                  <span className="text-xs text-slate-400">16:9</span>
+                  <span className="text-xs text-slate-400">Horizontal (16:9)</span>
                 </div>
 
                 <div className="flex gap-1.5 mb-4">
@@ -193,7 +193,7 @@ export default function Home() {
                       onClick={() => handleSelectSubstack(idx)}
                       className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition ${
                         selectedSubstack === idx
-                          ? 'bg-slate-900 text-white'
+                          ? 'bg-slate-900 text-white shadow-sm'
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                       }`}
                     >
@@ -204,10 +204,10 @@ export default function Home() {
 
                 {results.substack[selectedSubstack]?.image && (
                   <div className="mb-4">
-                    <div className="overflow-hidden rounded-xl border border-slate-200 aspect-video bg-slate-50 mb-1">
+                    <div className="overflow-hidden rounded-xl border border-slate-200 aspect-video bg-slate-50 mb-1.5">
                       <img
                         src={results.substack[selectedSubstack].image.landscapeUrl}
-                        alt="Imagen para Substack"
+                        alt="Substack"
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -221,17 +221,17 @@ export default function Home() {
                   rows={7}
                   value={editedSubstackText}
                   onChange={(e) => setEditedSubstackText(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-800"
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900"
                 />
               </div>
 
               <button
                 onClick={() => copyToClipboard(editedSubstackText, 'substack')}
-                className="mt-5 w-full bg-slate-900 text-white py-2.5 rounded-xl text-xs font-medium hover:bg-slate-800 transition"
+                className="mt-5 w-full bg-slate-900 text-white py-2.5 rounded-xl text-xs font-medium hover:bg-slate-800 transition shadow-sm"
               >
-                {copiedSubstack ? '¡Copiado! ✓' : 'Copiar para Substack Notes'}
+                {copiedSubstack ? '¡Copiado al portapapeles! ✓' : 'Copiar texto de Substack'}
               </button>
-            </div>
+            </section>
           </div>
         )}
       </div>
