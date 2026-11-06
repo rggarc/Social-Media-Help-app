@@ -9,10 +9,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'La URL es obligatoria' }, { status: 400 });
     }
 
-    const apiKey = process.env.DEEPSEEK_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { error: 'Falta configurar DEEPSEEK_API_KEY en Vercel.' },
+        { error: 'Falta configurar GROQ_API_KEY en Vercel.' },
         { status: 500 }
       );
     }
@@ -25,14 +25,15 @@ Genera dos textos promocionales en español:
 DEBES responder ÚNICAMENTE con un objeto JSON válido con este formato exacto:
 {"instagram": "Texto para Instagram", "substack": "Texto para Substack"}`;
 
-    const response = await fetch('https://api.deepseek.com/chat/completions', {
+    // Endpoint oficial de Groq (compatible con OpenAI) usando el modelo Llama 3 de alta velocidad
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
+        model: 'llama-3.3-70b-versatile',
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' },
       }),
@@ -42,7 +43,7 @@ DEBES responder ÚNICAMENTE con un objeto JSON válido con este formato exacto:
 
     if (!response.ok) {
       return NextResponse.json(
-        { error: `Error en la API de DeepSeek: ${data.error?.message || 'Error desconocido'}` },
+        { error: `Error en la API de Groq: ${data.error?.message || 'Error desconocido'}` },
         { status: response.status }
       );
     }
