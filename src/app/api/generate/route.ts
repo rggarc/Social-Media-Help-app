@@ -25,8 +25,8 @@ Genera dos textos promocionales en español:
 DEBES responder ÚNICAMENTE con un objeto JSON válido con este formato exacto:
 {"instagram": "Texto para Instagram", "substack": "Texto para Substack"}`;
 
-    // Usamos el modelo v2.0-flash que está completamente operativo en la API REST actual
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    // Usamos el modelo gemini-3.8-flash que indica la API actual
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(endpoint, {
       method: 'POST',
