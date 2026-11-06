@@ -25,32 +25,42 @@ Genera dos textos promocionales en español:
 DEBES responder ÚNICAMENTE con un objeto JSON válido con este formato exacto:
 {"instagram": "Texto para Instagram", "substack": "Texto para Substack"}`;
 
-    // Usamos el modelo gemini-3.8-flash que indica la API actual
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
+    // Probamos primero con gemini-1.5-flash y si hay alta demanda, con gemini-1.5-pro de respaldo
+    const models = ['gemini-1.5-flash', 'gemini-1.5-pro'];
+    let response = null;
+    let data = null;
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-      }),
-    });
+    for (const model of models) {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+          }),
+        });
 
-    const data = await response.json();
+        const json = await res.json();
+        if (res.ok && json.candidates?.[0]?.content?.parts?.[0]?.text) {
+          response = res;
+          data = json;
+          break;
+        }
+      } catch (err) {
+        continue;
+      }
+    }
 
-    if (!response.ok) {
+    if (!response || !data || !data.candidates?.[0]?.content?.parts?.[0]?.text) {
       return NextResponse.json(
-        { error: `Google API Error: ${data.error?.message || 'Error en la petición'}` },
-        { status: response.status }
+        { error: 'Los servidores de IA están ocupados en este momento. Por favor, pulsa de nuevo en generar en unos segundos.' },
+        { status: 503 }
       );
     }
 
-    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!rawText) {
-      return NextResponse.json({ error: 'Sin respuesta de la IA' }, { status: 500 });
-    }
-
+    const rawText = data.candidates[0].content.parts[0].text;
     let cleanJson = rawText.trim();
     if (cleanJson.startsWith('```')) {
       cleanJson = cleanJson.replace(/^```(json)?/, '').replace(/```$/, '').trim();
