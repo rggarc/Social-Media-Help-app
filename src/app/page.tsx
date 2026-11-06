@@ -5,16 +5,35 @@ import { useState } from 'react';
 export default function Home() {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
-  const [generated, setGenerated] = useState(false);
+  const [results, setResults] = useState<{ instagram: string; substack: string } | null>(null);
+  const [error, setError] = useState('');
 
-  const handleGenerate = (e: React.FormEvent) => {
+  const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url) return;
     setLoading(true);
-    setTimeout(() => {
+    setError('');
+    setResults(null);
+
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Error al generar el contenido');
+      }
+
+      setResults(data);
+    } catch (err: any) {
+      setError(err.message || 'Ha ocurrido un error inesperado');
+    } finally {
       setLoading(false);
-      setGenerated(true);
-    }, 1000);
+    }
   };
 
   return (
@@ -39,25 +58,27 @@ export default function Home() {
             required
           />
           <button type="submit" disabled={loading} className="button">
-            {loading ? 'Analizando contenido...' : '✨ Generar Opciones para RRSS'}
+            {loading ? 'Analizando con IA...' : '✨ Generar Opciones para RRSS'}
           </button>
         </form>
       </div>
 
-      {generated && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      {error && (
+        <div style={{ color: '#f87171', fontSize: '0.875rem', textAlign: 'center', marginTop: '1rem' }}>
+          {error}
+        </div>
+      )}
+
+      {results && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
           <div className="result-card">
             <span className="tag-ig">Instagram</span>
-            <p className="result-text">
-              🚀 ¡Nuevo artículo publicado! Descubre las claves principales sobre cómo estructurar proyectos web eficientes desde el móvil. ¿Te lo vas a perder? 📲 Lee más en el enlace de la bio. #WebDev #Desarrollo #Tech
-            </p>
+            <p className="result-text">{results.instagram}</p>
           </div>
 
           <div className="result-card">
             <span className="tag-sub">Substack Notes</span>
-            <p className="result-text">
-              Reflexiones de hoy: el desarrollo web moderno ya no depende exclusivamente de un ordenador de sobremesa. Te cuento cómo estoy construyendo aplicaciones completas directamente mediante flujos móviles. 👇
-            </p>
+            <p className="result-text">{results.substack}</p>
           </div>
         </div>
       )}
