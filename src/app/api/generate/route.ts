@@ -9,110 +9,114 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'La URL es obligatoria' }, { status: 400 });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'Falta configurar OPENAI_API_KEY en Vercel.' },
-        { status: 500 }
-      );
+    // 1. Obtención del contenido real de la página
+    let pageTitle = '';
+    let description = '';
+    let metaImage = '';
+
+    try {
+      const htmlRes = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+      if (htmlRes.ok) {
+        const htmlText = await htmlRes.text();
+        
+        // Extracción básica de metadatos OpenGraph / HTML
+        const titleMatch = htmlText.match(/<title>(.*?)<\/title>/i) || htmlText.match(/property="og:title" content="(.*?)"/i);
+        const descMatch = htmlText.match(/property="og:description" content="(.*?)"/i) || htmlText.match(/name="description" content="(.*?)"/i);
+        const imgMatch = htmlText.match(/property="og:image" content="(.*?)"/i);
+
+        if (titleMatch) pageTitle = titleMatch[1].replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+        if (descMatch) description = descMatch[1].replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+        if (imgMatch) metaImage = imgMatch[1];
+      }
+    } catch {
+      // Si el sitio bloquea el raspado, usamos limpieza del enlace
     }
 
-    // Extracción de tema para Pexels
-    const urlPath = new URL(url).pathname;
-    const segments = urlPath.split('/').filter(Boolean);
-    const topicHint = segments.pop()?.replace(/[-_]/g, ' ') || 'escritura creativa';
+    // Limpieza de respaldo si no se pudieron extraer metadatos completos
+    if (!pageTitle) {
+      const path = new URL(url).pathname.split('/').filter(Boolean).pop() || '';
+      pageTitle = path.replace(/[-_]/g, ' ').replace(/\.(html|php)$/, '') || 'Nuevo artículo';
+      pageTitle = pageTitle.charAt(0).toUpperCase() + pageTitle.slice(1);
+    }
 
-    // Llamada a Pexels para imágenes dinámicas
-    let fetchedImages = [
+    // 2. Definición de la imagen (usa la del post o busca en Pexels)
+    let selectedImage = {
+      squareUrl: metaImage || 'https://images.pexels.com/photos/261763/pexels-photo-261763.jpeg?auto=compress&cs=tinysrgb&w=600',
+      landscapeUrl: metaImage || 'https://images.pexels.com/photos/261763/pexels-photo-261763.jpeg?auto=compress&cs=tinysrgb&w=800',
+      author: metaImage ? 'Imagen del artículo' : 'Pixabay',
+      authorUrl: metaImage ? url : 'https://www.pexels.com'
+    };
+
+    // Si no hay imagen en el post, buscar en Pexels por el título
+    if (!metaImage) {
+      try {
+        const pexelsRes = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(pageTitle)}&per_page=1`, {
+          headers: { Authorization: process.env.PEXELS_API_KEY || '563492ad6f91700001000001b6711516f49740e7a164b3602161b3e2' }
+        });
+        if (pexelsRes.ok) {
+          const pData = await pexelsRes.json();
+          if (pData.photos?.[0]) {
+            const p = pData.photos[0];
+            selectedImage = {
+              squareUrl: p.src.square,
+              landscapeUrl: p.src.medium,
+              author: p.photographer,
+              authorUrl: p.photographer_url
+            };
+          }
+        }
+      } catch {}
+    }
+
+    // 3. Generación de las 3 opciones de extractos reales
+    const excerpt = description || `Un vistazo en profundidad a ${pageTitle}.`;
+    const cleanTag = pageTitle.replace(/[^a-zA-Z0-9]/g, '');
+
+    const instagramOptions = [
       {
-        squareUrl: 'https://images.pexels.com/photos/261763/pexels-photo-261763.jpeg?auto=compress&cs=tinysrgb&w=600',
-        landscapeUrl: 'https://images.pexels.com/photos/261763/pexels-photo-261763.jpeg?auto=compress&cs=tinysrgb&w=800',
-        author: 'Pixabay',
-        authorUrl: 'https://www.pexels.com/@pixabay/'
+        id: 1,
+        label: 'Extracto / Cita',
+        text: `«${pageTitle}»\n\n${excerpt}\n\nUn nuevo texto ya disponible. Tienes el enlace completo directo en el perfil.\n\n#Escritura #${cleanTag} #Lectura #Libros`,
+        image: selectedImage
       },
       {
-        squareUrl: 'https://images.pexels.com/photos/3059747/pexels-photo-3059747.jpeg?auto=compress&cs=tinysrgb&w=600',
-        landscapeUrl: 'https://images.pexels.com/photos/3059747/pexels-photo-3059747.jpeg?auto=compress&cs=tinysrgb&w=800',
-        author: 'Eneida Nieves',
-        authorUrl: 'https://www.pexels.com/@eneidanieves/'
+        id: 2,
+        label: 'Resumen',
+        text: `Nuevo post publicado: ${pageTitle}.\n\nUna breve pincelada de lo que encontrarás:\n\n${excerpt}\n\n💬 Te espero en los comentarios para saber qué opinas.\n\n#Escritores #${cleanTag} #Novedades`,
+        image: selectedImage
       },
       {
-        squareUrl: 'https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg?auto=compress&cs=tinysrgb&w=600',
-        landscapeUrl: 'https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg?auto=compress&cs=tinysrgb&w=800',
-        author: 'Johannes Plenio',
-        authorUrl: 'https://www.pexels.com/@jplenio/'
+        id: 3,
+        label: 'Gancho Corto',
+        text: `¿Has leído ya lo último sobre ${pageTitle}?\n\n"${excerpt}"\n\nPasa por el enlace de la bio para leer la entrada completa.\n\n#${cleanTag} #ComunidadLectora #Autores`,
+        image: selectedImage
       }
     ];
 
-    try {
-      const pexelsRes = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(topicHint)}&per_page=3`, {
-        headers: { Authorization: process.env.PEXELS_API_KEY || '563492ad6f91700001000001b6711516f49740e7a164b3602161b3e2' }
-      });
-      if (pexelsRes.ok) {
-        const pData = await pexelsRes.json();
-        if (pData.photos?.length > 0) {
-          fetchedImages = pData.photos.map((p: any) => ({
-            squareUrl: p.src.square,
-            landscapeUrl: p.src.medium,
-            author: p.photographer,
-            authorUrl: p.photographer_url
-          }));
-        }
-      }
-    } catch {}
-
-    // Prompt estricto para OpenAI para que extraiga valor real y resúmenes serios
-    const prompt = `Analiza este enlace o tema: ${url}. 
-Genera contenido promocional de alta calidad en español. Evita frases vacías o preguntas forzadas; céntrate en resumir la esencia y extraer valor real.
-
-Devuelve UNICAMENTE un objeto JSON con este formato exacto:
-{
-  "instagram": [
-    { "id": 1, "label": "Resumen Clave", "text": "Texto para Instagram opción 1..." },
-    { "id": 2, "label": "Enfoque Profundo", "text": "Texto para Instagram opción 2..." },
-    { "id": 3, "label": "Directo al grano", "text": "Texto para Instagram opción 3..." }
-  ],
-  "substack": [
-    { "id": 1, "label": "Nota Editorial", "text": "Texto para Substack Notes opción 1 incluyendo la URL al final" },
-    { "id": 2, "label": "Cita / Extracto", "text": "Texto para Substack Notes opción 2 incluyendo la URL al final" },
-    { "id": 3, "label": "Reflexión", "text": "Texto para Substack Notes opción 3 incluyendo la URL al final" }
-  ]
-}`;
-
-    const aiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+    const substackOptions = [
+      {
+        id: 1,
+        label: 'Nota Corta',
+        text: `Nuevo texto en la publicación: «${pageTitle}».\n\n${excerpt}\n\nPuedes leerlo completo aquí:\n${url}`,
+        image: selectedImage
       },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [{ role: 'user', content: prompt }],
-        response_format: { type: 'json_object' }
-      })
-    });
-
-    const aiData = await aiRes.json();
-    if (!aiRes.ok) {
-      return NextResponse.json({ error: aiData.error?.message || 'Error en OpenAI' }, { status: 500 });
-    }
-
-    const parsed = JSON.parse(aiData.choices[0].message.content);
-
-    // Adjuntar las imágenes de Pexels a las opciones generadas
-    const instagramWithOptions = parsed.instagram.map((item: any, i: number) => ({
-      ...item,
-      image: fetchedImages[i] || fetchedImages[0]
-    }));
-
-    const substackWithOptions = parsed.substack.map((item: any, i: number) => ({
-      ...item,
-      image: fetchedImages[i] || fetchedImages[0]
-    }));
+      {
+        id: 2,
+        label: 'Cita Destacada',
+        text: `«${excerpt}»\n\nUnas notas sobre ${pageTitle}:\n${url}`,
+        image: selectedImage
+      },
+      {
+        id: 3,
+        label: 'Reflexión',
+        text: `He estado ordenando algunas ideas en torno a ${pageTitle}.\n\nSi os apetece echarle un vistazo y comentar qué os parece:\n${url}`,
+        image: selectedImage
+      }
+    ];
 
     return NextResponse.json({
-      instagram: instagramWithOptions,
-      substack: substackWithOptions
+      instagram: instagramOptions,
+      substack: substackOptions
     });
 
   } catch (error) {
