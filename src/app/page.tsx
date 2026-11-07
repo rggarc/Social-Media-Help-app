@@ -43,28 +43,28 @@ export default function Home() {
         cleanTitle = 'Nuevo contenido';
       }
 
-      // Imagen fija limpia de demostración
+      // Imagen predeterminada elegante de escritorio/lectura
       const articleImage = 'https://images.pexels.com/photos/261763/pexels-photo-261763.jpeg?auto=compress&cs=tinysrgb&w=800';
       const tag = cleanTitle.replace(/[^a-zA-Z0-9]/g, '');
 
       // Párrafo extraído completo para la opción 2
-      const fullParagraph = `«Cuando nos adentramos en la escritura de ${cleanTitle}, nos damos cuenta de que cada detalle cuenta. La estructura no solo sostiene la historia, sino que marca el ritmo exacto con el que el lector conecta con las ideas principales.»`;
+      const fullParagraph = `«Cuando nos adentramos en la lectura de ${cleanTitle}, nos damos cuenta de que cada detalle cuenta. La estructura sostiene la historia y marca el ritmo con el que el lector conecta con la idea principal.»`;
 
       const igOptions: Option[] = [
         {
           id: 1,
           label: 'Frase clave',
-          text: `«${cleanTitle}»\n\nUna nueva entrada ya disponible. Enlace completo en la bio.\n\n#Escritura #${tag} #Lectura #Libros`,
+          text: `«${cleanTitle}»\n\nUna nueva entrada ya disponible. Enlace completo en el perfil.\n\n#Escritura #${tag} #Lectura #Libros`,
         },
         {
           id: 2,
           label: 'Párrafo completo',
-          text: `${fullParagraph}\n\nUn extracto directo del último post publicado. Enlace en el perfil para leer más.\n\n#Escritores #${tag} #Lecturas`,
+          text: `${fullParagraph}\n\nUn extracto directo del último post publicado. Enlace en la bio para continuar leyendo.\n\n#Escritores #${tag} #Lecturas`,
         },
         {
           id: 3,
           label: 'Gancho directo',
-          text: `¿Has leído ya lo último publicado?\n\n«${cleanTitle}»\n\nPasa por el enlace de la bio para descubrir todos los detalles.\n\n#${tag} #ComunidadLectora #Autores`,
+          text: `¿Has leído ya lo último que he publicado?\n\n«${cleanTitle}»\n\nPásate por el enlace del perfil para descubrir todos los detalles.\n\n#${tag} #ComunidadLectora #Autores`,
         }
       ];
 
@@ -121,151 +121,161 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-100 py-8 px-4 font-sans text-slate-800">
-      <div className="max-w-6xl mx-auto">
+    <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh', padding: '32px 16px', fontFamily: 'system-ui, -apple-system, sans-serif', color: '#1e293b' }}>
+      <div style={{ maxWidth: '960px', margin: '0 auto' }}>
         
-        {/* Encabezado compacto */}
-        <header className="text-center mb-6">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">
+        {/* Cabecera limpia */}
+        <header style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <h1 style={{ fontSize: '26px', fontWeight: '800', color: '#0f172a', margin: '0 0 6px 0' }}>
             Gestor de Publicaciones
           </h1>
-          <p className="text-slate-600 text-xs">
-            Genera y adapta tus copys e imágenes para Instagram y Substack de un solo vistazo.
+          <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+            Genera copys listos para compartir y ajusta las imágenes de un solo vistazo.
           </p>
         </header>
 
         {/* Buscador de URL */}
-        <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-200 mb-6 max-w-2xl mx-auto">
-          <form onSubmit={handleGenerate} className="flex gap-2">
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', marginBottom: '24px', maxWidth: '600px', margin: '0 auto 24px auto' }}>
+          <form onSubmit={handleGenerate} style={{ display: 'flex', gap: '8px' }}>
             <input
               type="url"
               placeholder="Pega la URL de tu post..."
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               required
-              className="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-slate-800"
+              style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none' }}
             />
             <button
               type="submit"
               disabled={loading}
-              className="bg-slate-900 text-white font-medium px-4 py-2 rounded-lg text-xs hover:bg-slate-800 transition disabled:opacity-50"
+              style={{ backgroundColor: '#0f172a', color: '#ffffff', fontWeight: '600', padding: '10px 18px', borderRadius: '8px', border: 'none', fontSize: '13px', cursor: 'pointer', opacity: loading ? 0.6 : 1 }}
             >
-              {loading ? 'Extrayendo...' : 'Generar Opciones'}
+              {loading ? 'Procesando...' : 'Generar Opciones'}
             </button>
           </form>
         </div>
 
-        {/* Dos columnas visibles de un solo vistazo en PC */}
+        {/* Dos columnas en paralelo de un vistazo */}
         {results && (
-          <div className="grid md:grid-cols-2 gap-6 items-start">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', alignItems: 'start' }}>
             
-            {/* Columna Izquierda: Instagram */}
-            <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
-                  <h2 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-pink-500"></span>
-                    Instagram
-                  </h2>
-                  <span className="text-[11px] text-slate-400 font-mono">1:1 (Cuadrado)</span>
+            {/* Columna Instagram */}
+            <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px solid #f1f5f9' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ec4899', display: 'inline-block' }}></span>
+                  <strong style={{ fontSize: '14px', color: '#0f172a' }}>Instagram</strong>
                 </div>
-
-                {/* Botones de opción */}
-                <div className="flex gap-1.5 mb-3">
-                  {results.instagram.map((opt, idx) => (
-                    <button
-                      key={opt.id}
-                      onClick={() => handleSelectIG(idx)}
-                      className={`flex-1 py-1 px-2 rounded-md text-[11px] font-medium border transition ${
-                        selectedIG === idx
-                          ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Previsualización de Imagen Compacta 1:1 */}
-                <div className="mb-3 flex justify-center">
-                  <div className="w-36 h-36 rounded-lg overflow-hidden border border-slate-200 bg-slate-50 shadow-inner">
-                    <img
-                      src={results.image}
-                      alt="IG 1:1"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </div>
-
-                {/* Editor de texto */}
-                <textarea
-                  rows={5}
-                  value={editedIGText}
-                  onChange={(e) => setEditedIGText(e.target.value)}
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-800 leading-relaxed"
-                />
+                <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }}>1:1 Cuadrado</span>
               </div>
+
+              {/* Botones de opción */}
+              <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
+                {results.instagram.map((opt, idx) => (
+                  <button
+                    key={opt.id}
+                    onClick={() => handleSelectIG(idx)}
+                    style={{
+                      flex: 1,
+                      padding: '6px 4px',
+                      borderRadius: '6px',
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      border: '1px solid',
+                      borderColor: selectedIG === idx ? '#0f172a' : '#e2e8f0',
+                      backgroundColor: selectedIG === idx ? '#0f172a' : '#f8fafc',
+                      color: selectedIG === idx ? '#ffffff' : '#64748b',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Previsualización de Imagen Compacta 1:1 */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                <div style={{ width: '140px', height: '140px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+                  <img
+                    src={results.image}
+                    alt="IG 1:1"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                </div>
+              </div>
+
+              {/* Editor de texto */}
+              <textarea
+                rows={5}
+                value={editedIGText}
+                onChange={(e) => setEditedIGText(e.target.value)}
+                style={{ width: '100%', padding: '10px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', color: '#1e293b', resize: 'vertical', boxSizing: 'border-box' }}
+              />
 
               <button
                 onClick={() => copyToClipboard(editedIGText, 'ig')}
-                className="mt-3 w-full bg-slate-900 text-white py-2 rounded-lg text-xs font-medium hover:bg-slate-800 transition shadow-sm"
+                style={{ marginTop: '12px', width: '100%', backgroundColor: '#0f172a', color: '#ffffff', padding: '10px', borderRadius: '8px', border: 'none', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
               >
                 {copiedIG ? '¡Copiado al portapapeles! ✓' : 'Copiar para Instagram'}
               </button>
             </div>
 
-            {/* Columna Derecha: Substack Notes */}
-            <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
-                  <h2 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
-                    Substack Notes
-                  </h2>
-                  <span className="text-[11px] text-slate-400 font-mono">16:9 (Horizontal)</span>
+            {/* Columna Substack Notes */}
+            <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px solid #f1f5f9' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#f97316', display: 'inline-block' }}></span>
+                  <strong style={{ fontSize: '14px', color: '#0f172a' }}>Substack Notes</strong>
                 </div>
-
-                {/* Botones de opción */}
-                <div className="flex gap-1.5 mb-3">
-                  {results.substack.map((opt, idx) => (
-                    <button
-                      key={opt.id}
-                      onClick={() => handleSelectSubstack(idx)}
-                      className={`flex-1 py-1 px-2 rounded-md text-[11px] font-medium border transition ${
-                        selectedSubstack === idx
-                          ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Previsualización de Imagen Compacta 16:9 */}
-                <div className="mb-3 flex justify-center">
-                  <div className="w-48 h-28 rounded-lg overflow-hidden border border-slate-200 bg-slate-50 shadow-inner">
-                    <img
-                      src={results.image}
-                      alt="Notes 16:9"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </div>
-
-                {/* Editor de texto */}
-                <textarea
-                  rows={5}
-                  value={editedSubstackText}
-                  onChange={(e) => setEditedSubstackText(e.target.value)}
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-800 leading-relaxed"
-                />
+                <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }}>16:9 Horizontal</span>
               </div>
+
+              {/* Botones de opción */}
+              <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
+                {results.substack.map((opt, idx) => (
+                  <button
+                    key={opt.id}
+                    onClick={() => handleSelectSubstack(idx)}
+                    style={{
+                      flex: 1,
+                      padding: '6px 4px',
+                      borderRadius: '6px',
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      border: '1px solid',
+                      borderColor: selectedSubstack === idx ? '#0f172a' : '#e2e8f0',
+                      backgroundColor: selectedSubstack === idx ? '#0f172a' : '#f8fafc',
+                      color: selectedSubstack === idx ? '#ffffff' : '#64748b',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Previsualización de Imagen Compacta 16:9 */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                <div style={{ width: '200px', height: '112px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+                  <img
+                    src={results.image}
+                    alt="Notes 16:9"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                </div>
+              </div>
+
+              {/* Editor de texto */}
+              <textarea
+                rows={5}
+                value={editedSubstackText}
+                onChange={(e) => setEditedSubstackText(e.target.value)}
+                style={{ width: '100%', padding: '10px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', color: '#1e293b', resize: 'vertical', boxSizing: 'border-box' }}
+              />
 
               <button
                 onClick={() => copyToClipboard(editedSubstackText, 'substack')}
-                className="mt-3 w-full bg-orange-600 text-white py-2 rounded-lg text-xs font-medium hover:bg-orange-700 transition shadow-sm"
+                style={{ marginTop: '12px', width: '100%', backgroundColor: '#ea580c', color: '#ffffff', padding: '10px', borderRadius: '8px', border: 'none', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
               >
                 {copiedSubstack ? '¡Copiado al portapapeles! ✓' : 'Copiar para Substack Notes'}
               </button>
@@ -274,6 +284,6 @@ export default function Home() {
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }
