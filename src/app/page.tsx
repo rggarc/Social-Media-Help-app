@@ -44,7 +44,7 @@ export default function Home() {
       }
 
       // Imagen predeterminada elegante de escritorio/lectura
-      const articleImage = 'https://images.pexels.com/photos/261763/pexels-photo-261763.jpeg?auto=compress&cs=tinysrgb&w=800';
+      const articleImage = `https://api.microlink.io/?url=${encodeURIComponent(url)}&embed=image.url`;
       const tag = cleanTitle.replace(/[^a-zA-Z0-9]/g, '');
 
       // Párrafo extraído completo para la opción 2
