@@ -27,6 +27,7 @@ export default function Home() {
 
     setLoading(true);
 
+    // Procesamiento instantáneo y seguro directamente en el navegador
     setTimeout(() => {
       let cleanTitle = 'Publicación reciente';
       try {
@@ -88,7 +89,7 @@ export default function Home() {
       setEditedIGText(igOptions[0].text);
       setEditedSubstackText(substackOptions[0].text);
       setLoading(false);
-    }, 400);
+    }, 300);
   };
 
   const handleSelectIG = (idx: number) => {
@@ -116,7 +117,7 @@ export default function Home() {
     <main className="min-h-screen bg-slate-950 text-slate-100 py-12 px-4 sm:px-6 font-sans antialiased">
       <div className="max-w-5xl mx-auto">
         
-        {/* Encabezado Moderno */}
+        {/* Encabezado */}
         <header className="text-center mb-10">
           <span className="inline-block px-3 py-1 mb-3 text-xs font-semibold tracking-wider text-indigo-400 uppercase bg-indigo-950/60 border border-indigo-800/50 rounded-full">
             Estudio de Contenido
@@ -129,7 +130,7 @@ export default function Home() {
           </p>
         </header>
 
-        {/* Caja de Input */}
+        {/* Formulario */}
         <div className="bg-slate-900/80 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-slate-800 shadow-xl mb-12">
           <form onSubmit={handleGenerate} className="flex flex-col sm:flex-row gap-3">
             <input
@@ -154,7 +155,7 @@ export default function Home() {
         {results && (
           <div className="grid lg:grid-cols-2 gap-8">
             
-            {/* Tarjeta Instagram */}
+            {/* Instagram */}
             <article className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between shadow-lg">
               <div>
                 <div className="flex items-center justify-between mb-5 pb-3 border-b border-slate-800/80">
@@ -169,7 +170,6 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Selector de opciones */}
                 <div className="flex gap-2 mb-5 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
                   {results.instagram.map((opt, idx) => (
                     <button
@@ -186,12 +186,11 @@ export default function Home() {
                   ))}
                 </div>
 
-                {/* Vista Previa Imagen 1:1 (Cuadrada para IG) */}
                 <div className="mb-5">
                   <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-inner">
                     <img
                       src={results.instagram[selectedIG].image}
-                      alt="Formato Instagram 1:1"
+                      alt="Instagram 1:1"
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute top-3 right-3 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-md text-[10px] text-slate-300 font-mono border border-slate-800">
@@ -200,7 +199,6 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Editor de Texto */}
                 <textarea
                   rows={6}
                   value={editedIGText}
@@ -217,7 +215,7 @@ export default function Home() {
               </button>
             </article>
 
-            {/* Tarjeta Substack Notes */}
+            {/* Substack Notes */}
             <article className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between shadow-lg">
               <div>
                 <div className="flex items-center justify-between mb-5 pb-3 border-b border-slate-800/80">
@@ -232,7 +230,6 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Selector de opciones */}
                 <div className="flex gap-2 mb-5 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
                   {results.substack.map((opt, idx) => (
                     <button
@@ -249,12 +246,11 @@ export default function Home() {
                   ))}
                 </div>
 
-                {/* Vista Previa Imagen 16:9 (Horizontal para Substack) */}
                 <div className="mb-5">
                   <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-inner">
                     <img
                       src={results.substack[selectedSubstack].image}
-                      alt="Formato Substack 16:9"
+                      alt="Substack 16:9"
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute top-3 right-3 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-md text-[10px] text-slate-300 font-mono border border-slate-800">
@@ -263,7 +259,6 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Editor de Texto */}
                 <textarea
                   rows={6}
                   value={editedSubstackText}
