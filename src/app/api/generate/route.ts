@@ -29,12 +29,12 @@ export async function POST(request: Request) {
         const imgMatch = htmlText.match(/property="og:image" content="(.*?)"/i);
         if (imgMatch) metaImage = imgMatch[1];
 
-        // Extracción de párrafos reales del cuerpo del artículo (<p>...</p>)
-        const pMatches = htmlText.match(/<p\b[^>]*>(.*?)<\/p>/gis);
+        // Extracción de párrafos reales corregida sin banderas incompatibles
+        const pMatches = htmlText.match(/<p\b[^>]*>([\s\S]*?)<\/p>/gi);
         if (pMatches) {
           paragraphs = pMatches
             .map(p => p.replace(/<[^>]*>/g, '').trim())
-            .filter(p => p.length > 60 && p.length < 300); // Párrafos con sustancia
+            .filter(p => p.length > 60 && p.length < 300);
         }
       }
     } catch {}
@@ -45,7 +45,6 @@ export async function POST(request: Request) {
       pageTitle = pageTitle.charAt(0).toUpperCase() + pageTitle.slice(1);
     }
 
-    // Seleccionar párrafos reales o texto de respaldo
     const p1 = paragraphs[0] || `En esta nueva entrada profundizamos en las ideas centrales de ${pageTitle}.`;
     const p2 = paragraphs[1] || paragraphs[0] || `Un análisis detallado sobre los matices clave que marcan el ritmo de este texto.`;
     const p3 = paragraphs[2] || paragraphs[1] || `Cada detalle cuenta para entender la dirección de esta historia.`;
@@ -53,21 +52,18 @@ export async function POST(request: Request) {
     const tag = pageTitle.replace(/[^a-zA-Z0-9]/g, '');
     const finalImage = metaImage || `https://api.microlink.io/?url=${encodeURIComponent(url)}&embed=image.url`;
 
-    // 1. Opciones Instagram Feed
     const instagramOptions = [
       { id: 1, label: 'Frase clave', text: `«${pageTitle}»\n\nUna nueva entrada ya disponible. Enlace completo en el perfil.\n\n#Escritura #${tag} #Lectura #Libros` },
       { id: 2, label: 'Párrafo', text: `«${p1}»\n\nExtracto directo del último post. Enlace en la bio.\n\n#Escritores #${tag} #Lecturas` },
       { id: 3, label: 'Gancho', text: `¿Has leído ya lo último que he publicado?\n\n«${pageTitle}»\n\nPásate por el enlace del perfil para descubrir todos los detalles.\n\n#${tag} #ComunidadLectora #Autores` }
     ];
 
-    // 2. Opciones Substack Notes (La 3ª ahora es estilo gancho directo)
     const substackOptions = [
       { id: 1, label: 'Nota corta', text: `Nuevo texto publicado: «${pageTitle}».\n\nPuedes leerlo completo aquí:\n${url}` },
       { id: 2, label: 'Párrafo', text: `«${p1}»\n\nUn fragmento de las notas publicadas hoy:\n${url}` },
       { id: 3, label: 'Gancho directo', text: `¿Has leído ya lo último que he publicado en torno a ${pageTitle}?\n\nPásate por el enlace para descubrir todos los detalles:\n${url}` }
     ];
 
-    // 3. Opciones Instagram Stories (Con enlace incluido)
     const storyOptions = [
       { id: 1, label: 'Texto + Enlace', text: `NUEVO POST 📖\n\n«${pageTitle}»\n\n🔗 Enlace directo:\n${url}` },
       { id: 2, label: 'Cita destacada', text: `«${p1}»\n\n🔗 Lee el texto completo aquí:\n${url}` },
@@ -80,7 +76,7 @@ export async function POST(request: Request) {
       instagram: instagramOptions,
       substack: substackOptions,
       stories: storyOptions,
-      rawParagraphs: [p1, p2, p3] // Guardamos los párrafos por si quieres rotarlos
+      rawParagraphs: [p1, p2, p3]
     });
 
   } catch (error) {
