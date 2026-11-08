@@ -9,10 +9,11 @@ interface Option {
 }
 
 export default function Home() {
-  const [url, setUrl] = useState('');
+  const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<{
     image: string;
+    isUrl: boolean;
     instagram: Option[];
     substack: Option[];
     stories: Option[];
@@ -35,14 +36,14 @@ export default function Home() {
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!url) return;
+    if (!inputText.trim()) return;
 
     setLoading(true);
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url: inputText }),
       });
 
       const json = await res.json();
@@ -57,7 +58,7 @@ export default function Home() {
         setEditedSubstackText(json.substack[0]?.text || '');
         setEditedStoryText(json.stories[0]?.text || '');
       } else {
-        alert(json.error || 'Error procesando la URL');
+        alert(json.error || 'Error procesando el contenido');
       }
     } catch {
       alert('Error de conexión');
@@ -66,17 +67,15 @@ export default function Home() {
     }
   };
 
-  // Función para cambiar de párrafo al hacer clic en "Otro párrafo"
   const handleRotateParagraph = () => {
     if (!data) return;
     const nextIdx = (paragraphIndex + 1) % data.rawParagraphs.length;
     setParagraphIndex(nextIdx);
     const newP = data.rawParagraphs[nextIdx];
 
-    // Actualizar opción de párrafo (índice 1 en IG y Substack y Stories)
-    if (selectedIG === 1) setEditedIGText(`«${newP}»\n\nExtracto directo del último post. Enlace en la bio.`);
-    if (selectedSubstack === 1) setEditedSubstackText(`«${newP}»\n\nUn fragmento de las notas publicadas hoy:\n${url}`);
-    if (selectedStory === 1) setEditedStoryText(`«${newP}»\n\n🔗 Lee el texto completo aquí:\n${url}`);
+    if (selectedIG === 1) setEditedIGText(`«${newP}»\n\nExtracto directo del texto. Enlace en el perfil.`);
+    if (selectedSubstack === 1) setEditedSubstackText(`«${newP}»\n\nUn fragmento del texto:\n${data.isUrl ? inputText : '[Enlace]'}`);
+    if (selectedStory === 1) setEditedStoryText(`«${newP}»\n\n🔗 Lee el texto completo aquí:\n${data.isUrl ? inputText : '[Enlace]'}`);
   };
 
   const copyToClipboard = (text: string, type: 'ig' | 'substack' | 'story') => {
@@ -96,27 +95,27 @@ export default function Home() {
             Gestor de Publicaciones
           </h1>
           <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
-            Edita libremente los copys y extrae distintos párrafos reales para tus redes.
+            Pega una URL o directamente el texto de tu borrador para generar copys al instante.
           </p>
         </header>
 
-        {/* Buscador */}
-        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', marginBottom: '24px', maxWidth: '600px', margin: '0 auto 24px auto' }}>
-          <form onSubmit={handleGenerate} style={{ display: 'flex', gap: '8px' }}>
-            <input
-              type="url"
-              placeholder="Pega la URL de tu post..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
+        {/* Buscador / Caja de Texto */}
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', marginBottom: '24px', maxWidth: '650px', margin: '0 auto 24px auto' }}>
+          <form onSubmit={handleGenerate} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <textarea
+              placeholder="Pega aquí la URL de tu post o directamente el texto/borrador que quieras publicar..."
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
               required
-              style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none' }}
+              rows={3}
+              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
             />
             <button
               type="submit"
               disabled={loading}
-              style={{ backgroundColor: '#0f172a', color: '#ffffff', fontWeight: '600', padding: '10px 18px', borderRadius: '8px', border: 'none', fontSize: '13px', cursor: 'pointer', opacity: loading ? 0.6 : 1 }}
+              style={{ backgroundColor: '#0f172a', color: '#ffffff', fontWeight: '600', padding: '10px 18px', borderRadius: '8px', border: 'none', fontSize: '13px', cursor: 'pointer', opacity: loading ? 0.6 : 1, alignSelf: 'flex-end' }}
             >
-              {loading ? 'Extrayendo...' : 'Generar Opciones'}
+              {loading ? 'Procesando...' : 'Generar Opciones'}
             </button>
           </form>
         </div>
@@ -159,11 +158,13 @@ export default function Home() {
                   </button>
                 )}
 
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-                  <div style={{ width: '120px', height: '120px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
-                    <img src={data.image} alt="IG" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                {data.isUrl && data.image && (
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                    <div style={{ width: '120px', height: '120px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+                      <img src={data.image} alt="IG" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <textarea
                   rows={6}
@@ -213,11 +214,13 @@ export default function Home() {
                   </button>
                 )}
 
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-                  <div style={{ width: '90px', height: '140px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
-                    <img src={data.image} alt="Story" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                {data.isUrl && data.image && (
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                    <div style={{ width: '90px', height: '140px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+                      <img src={data.image} alt="Story" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <textarea
                   rows={6}
@@ -267,11 +270,13 @@ export default function Home() {
                   </button>
                 )}
 
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-                  <div style={{ width: '160px', height: '90px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
-                    <img src={data.image} alt="Notes" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                {data.isUrl && data.image && (
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                    <div style={{ width: '160px', height: '90px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+                      <img src={data.image} alt="Notes" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <textarea
                   rows={6}
